@@ -4,32 +4,55 @@
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
+import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="flex items-center justify-between p-4 bg-gray-100">
+    <nav className="flex items-center justify-between bg-white shadow px-6 py-4">
+      {/* Left: Text/CSS Logo */}
       <Link href="/">
-        <span className="text-xl font-bold">EZ Minutes</span>
+        <div className="flex items-center cursor-pointer">
+          {/* Logo Icon as a styled div */}
+          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-600 mr-2">
+            <span className="text-white font-bold text-sm">EZ</span>
+          </div>
+          <span className="text-xl font-bold text-blue-600">Minutes</span>
+        </div>
       </Link>
-      <div>
+      
+      {/* Right: Auth Controls */}
+      <div className="relative">
         {session ? (
-          <div className="relative inline-block">
+          <div className="flex items-center">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="rounded px-3 py-2 bg-blue-500 text-white"
+              className="focus:outline-none"
             >
-              {session.user.firstName}
+              {session.user.image ? (
+                <img
+                  src={session.user.image}
+                  alt="Profile"
+                  className="h-10 w-10 rounded-full"
+                />
+              ) : (
+                <span className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                  {session.user.firstName.charAt(0)}
+                </span>
+              )}
             </button>
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded bg-white shadow-lg">
-                <p className="p-2">Hello, {session.user.firstName}!</p>
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded shadow-lg z-10">
+                <div className="p-4 border-b">
+                  <p className="text-gray-800">Hello, {session.user.firstName}!</p>
+                </div>
                 <button
                   onClick={() => signOut()}
-                  className="w-full p-2 text-left hover:bg-gray-200"
+                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
                   Logout
                 </button>
               </div>
@@ -37,7 +60,7 @@ export default function Navbar() {
           </div>
         ) : (
           <Link href="/login">
-            <button className="rounded px-3 py-2 bg-blue-500 text-white">
+            <button className="rounded bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition">
               Login
             </button>
           </Link>
