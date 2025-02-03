@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "sqlite" // For local development; switch to "postgresql" in production.
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum SourceType {
+  YOUTUBE
+  ZOOM
+  OTHER
+}
+
+model User {
+  id            String      @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String      @unique
+  emailVerified DateTime?
+  image         String?
+  phoneNumber   String?
+  address       String?
+  role          Role        @default(USER)
+  
+  // NextAuth relations:
+  accounts      Account[]
+  sessions      Session[]
+  // Organizations owned by the user:
+  organizations Organization[] @relation("OrganizationOwner")
+  // Memberships in organizations:
+  memberships   OrganizationMember[]
+  // Personal templates:
+  templates     Template[]
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Account {
+  id                 String   @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  visibility  Visibility  @default(PRIVATE)
+  
+  owner       User        @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  meetings    Meeting[]
+  templates   Template[]  // Organization-specific templates.
+  members     OrganizationMember[]
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           Role         @default(USER) // This can be expanded to more specific roles if needed.
+  
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+  
+  @@unique([organizationId, userId])
+}
+
+model Meeting {
+  id             String     @id @default(cuid())
+  title          String
+  sourceUrl      String
+  sourceType     SourceType @default(OTHER)
+  transcript     String?
+  minutes        String?
+  // For potential future AI features (e.g., vector embeddings):
+  embedding      Json?
+  
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Template {
+  id             String    @id @default(cuid())
+  name           String
+  content        String    // This could be plain text, Markdown, or JSON, depending on your needs.
+  
+  // Optional ownership: either linked to an organization or a user.
+  organizationId String?
+  userId         String?
+  
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  user           User?         @relation(fields: [userId], references: [id])
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
