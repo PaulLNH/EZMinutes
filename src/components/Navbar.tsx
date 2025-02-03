@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
-import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import Image from "next/image"; // Use Next.js Image component
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -32,10 +33,12 @@ export default function Navbar() {
               className="focus:outline-none"
             >
               {session.user.image ? (
-                <img
+                <Image
                   src={session.user.image}
                   alt="Profile"
-                  className="h-10 w-10 rounded-full"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
                 />
               ) : (
                 <span className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
@@ -52,7 +55,7 @@ export default function Navbar() {
                   onClick={() => signOut()}
                   className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
-                  <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+                  <ArrowRightStartOnRectangleIcon className="h-5 w-5 mr-2" />
                   Logout
                 </button>
               </div>
